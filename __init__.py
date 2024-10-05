@@ -93,7 +93,20 @@ def menuCommand(event: Event):
     if len(event.message_list) == 1:
         Msg(*Api.text(), event=event).send()
     else:
-        Msg("阿巴阿巴阿巴阿巴，功能还在完善qwq", event=event).send()
+        cmdList: list = ListenerManager.get_listeners_by_type("command")
+        plugin = event.message_list[1]
+        for i in cmdList.keys():
+            if getPluginName(i) == plugin:
+                msg_list: list = [
+                    TextStatement(f"[{plugin}] 指令列表：", enter_flag=True)
+                ]
+                cmds = cmdList.get(i)
+                for item in cmds:
+                    msg_list.append(TextStatement(f"\n- {item.usage}\n  {item.description}", enter_flag=True))
+                Msg(msg_list, event=event).send()
+                break
+        else:
+            Msg(TextStatement("未找到该分类！", enter_flag=True), event=event).send()
 
 
 @Command(name="扫描表情", description="扫描表情ID", usage="扫描表情 <起始ID> <终止ID>")
@@ -104,3 +117,27 @@ def scanCommand(event: Event):
         msg_list.append(TextStatement(f" {i}:"))
         msg_list.append(FaceStatement(i))
     Msg(msg_list, event=event).send()
+
+@Command(name="帮助", description="获取帮助", usage="帮助 <指令名>")
+def helpCommand(event: Event):
+    cmdList: list = ListenerManager.get_listeners_by_type("command")
+    cmd = event.message_list[1]
+    for i in cmdList.keys():
+        cmds = cmdList.get(i)
+        for item in cmds:
+            if item.name == cmd:
+                Msg([
+                    FaceStatement(53), TextStatement(f"指令帮助", enter_flag=True),
+                    TextStatement(f"指令：{item.name}", enter_flag=True),
+                    TextStatement(f"描述：{item.description}", enter_flag=True),
+                    TextStatement(f"用法：{item.usage}", enter_flag=True),
+                    TextStatement(f"类型：{item.type}", enter_flag=True),
+                    TextStatement(f"权限：{item.permission}", enter_flag=True),
+                    TextStatement(f"隶属于插件：{getPluginName(i)}", enter_flag=True),
+                ], event=event).send()
+                break
+        else:
+            continue
+        break
+    else:
+        Msg(TextStatement("未找到该指令！", enter_flag=True), event=event).send()
